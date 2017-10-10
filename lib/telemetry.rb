@@ -1,29 +1,34 @@
 require 'client'
 
 class TelemetryDiagnostics
-  attr_reader :diagnostic_info
+  attr_accessor :diagnostic_info
+  attr_reader :telemetry_client
   DIAGNOSTIC_CHANNEL_CONNECTION_STRING = "*111#"
   
-  def initialize
-    @telemetry_client = TelemetryClient.new
+  def initialize(telemetry_client)
+    @telemetry_client = telemetry_client
     @diagnostic_info = ""
   end
 
   def check_transmission
-    @diagnostic_info = ""
-    @telemetry_client.disconnect
+    telemetry_client.disconnect
 
-    retry_left = 3
-    while (not @telemetry_client.online_status) and retry_left > 0
-      @telemetry_client.connect(DIAGNOSTIC_CHANNEL_CONNECTION_STRING)
-      retry_left -= 1
+    3.times do 
+      telemetry_client.connect(DIAGNOSTIC_CHANNEL_CONNECTION_STRING)
+      break if online?
     end
 
-    if not @telemetry_client.online_status
+    unless online?
       raise Exception.new("Unable to connect.")
     end
 
-    @telemetry_client.send(TelemetryClient::DIAGNOSTIC_MESSAGE)
-    @diagnostic_info = @telemetry_client.receive
+    telemetry_client.send(TelemetryClient::DIAGNOSTIC_MESSAGE)
+    self.diagnostic_info = telemetry_client.receive
+  end
+
+  private
+
+  def online?
+    !!telemetry_client.online_status  
   end
 end
