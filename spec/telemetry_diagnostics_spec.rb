@@ -37,4 +37,19 @@ RSpec.describe TelemetryDiagnostics do
         end
     end
 
+    describe "#initialize" do
+        let(:tc) {instance_double(
+            "TelemetryClient", 
+            :online_status => true,
+            :connect => nil,
+            :disconnect => nil,
+            :send => "sent",
+            :receive => "receive",
+            )}
+        it "has default values" do
+            td = TelemetryDiagnostics.new(tc)
+            expect(td.diagnostic_info).to be_empty
+        end
+    end
+
 end

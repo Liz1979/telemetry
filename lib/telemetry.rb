@@ -13,14 +13,8 @@ class TelemetryDiagnostics
   def check_transmission
     telemetry_client.disconnect
 
-    3.times do 
-      telemetry_client.connect(DIAGNOSTIC_CHANNEL_CONNECTION_STRING)
-      break if online?
-    end
-
-    unless online?
-      raise Exception.new("Unable to connect.")
-    end
+    attempt_to_make_connection
+    validate_online
 
     telemetry_client.send(TelemetryClient::DIAGNOSTIC_MESSAGE)
     self.diagnostic_info = telemetry_client.receive
@@ -31,4 +25,17 @@ class TelemetryDiagnostics
   def online?
     !!telemetry_client.online_status  
   end
+
+  def validate_online
+    unless online?
+      raise Exception.new("Unable to connect.")
+    end
+  end
+
+  def attempt_to_make_connection(n = 3)
+    n.times do 
+      telemetry_client.connect(DIAGNOSTIC_CHANNEL_CONNECTION_STRING)
+      break if online?
+     end
+   end 
 end
